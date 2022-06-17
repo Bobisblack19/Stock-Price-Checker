@@ -57,7 +57,47 @@ module.exports = function (app) {
     .get(async function (req, res){
       let security = req.query.stock;
       let like = req.query.like;
+      
+      if (Array.isArray(security)) {
+        console.log(security)
 
+        const { symbol, latestPrice} = await StockPrice(security[0])
+        const { symbol: symbol2, latestPrice: latestPrice2} = await StockPrice(security[1])
+
+        const firstStock = await saveStock(security[0], like, req.ip)
+        const secondStock = await saveStock(security[1], like, req.ip)
+
+        let stockData = [];
+        if(!symbol) {
+          stockData.push({
+            rel_likes: firstStock.likes.length - secondStock.likes.length
+          })
+        } else {
+          stockData.push({
+            stock:symbol,
+            price:latestPrice,
+            rel_likes: firstStock.likes.length - secondStock.likes.length
+          })
+        }
+
+        if(!symbol2) {
+          stockData.push({
+            rel_likes: secondStock.likes.length - firstStock.likes.length
+          })
+        } else {
+          stockData.push({
+            stock:symbol2,
+            price:latestPrice2,
+            rel_likes: secondStock.likes.length - firstStock.likes.length
+          })
+      }
+
+      res.json({
+        stockData,
+      });
+      return
+    }
+    
       console.log(security, like)
       
       const {symbol, latestPrice} = await StockPrice(security)
